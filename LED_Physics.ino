@@ -2,11 +2,12 @@
 #define LED_PIN 6             // Arduino pin connected to data pin of LEDS
 #define COLOR_ORDER GRB       // Strip Color order 
 #define CHIPSET WS2812B       // Strip Chipset
+#define BRIGHTNESS 255
 #define NUM_LEDS 299          // Number of Leds - 1
 
 // Size of 2 or less will cause bugs, for physics to work stick to under 10 at the moment
-#define LED_ONE_LENGTH 4     // Length of block 1
-#define LED_TWO_LENGTH 6      // Length of block 2
+#define LED_ONE_LENGTH 20     // Length of block 1
+#define LED_TWO_LENGTH 20      // Length of block 2
 
 // Variables for led block control and collision
 unsigned int red, green, blue;
@@ -33,12 +34,12 @@ void setup() {
   randomSeed(analogRead(0));
   Serial.begin(9600);
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS + 1);
-  FastLED.setBrightness(100);
+  FastLED.setBrightness(BRIGHTNESS);
 
   // Set all LEDs off
   for(int i = 0; i < NUM_LEDS ; i++) {
-      leds[i] = CRGB(0,0,0);
-    }
+    leds[i] = CRGB(0,0,0);
+  }
 
   // Randomize first LED block color
   red = random(255);
@@ -47,7 +48,7 @@ void setup() {
 
   // Set first block starting position
   for(int i = 0; i < LED_ONE_LENGTH; i++) {
-      leds[i] = CRGB(0, 0, 255);
+      leds[i] = CRGB(red, green, blue);
   }
 
   // Randomize second block color
@@ -57,7 +58,7 @@ void setup() {
 
   // Set second block starting position
   for(int i = NUM_LEDS - LED_TWO_LENGTH; i < NUM_LEDS; i++) {
-    leds[i] = CRGB(0, 255, 0);
+    leds[i] = CRGB(red, green, blue);
   }
 
 //  Serial.print("First Strip index: ");
@@ -72,6 +73,15 @@ void loop() {
   if(led1Collision) {
     led1_index = led1_index + LED_ONE_LENGTH - 1;
     led1_velocity = -1 * led1_velocity;
+
+    red = random(255);
+    green = random(255);
+    blue = random(255);
+    
+    for(int i = led1_index; i >= led1_index - LED_ONE_LENGTH + 1; i--) {
+       leds[i] = CRGB(red, green, blue);
+    }
+    
     shiftForwards(led1_index, 1);
   }
 
@@ -79,6 +89,15 @@ void loop() {
   if(led2Collision) {
     led2_index = led2_index - LED_TWO_LENGTH + 1;
     led2_velocity = -1 * led2_velocity;
+
+    red = random(255);
+    green = random(255);
+    blue = random(255);
+    
+    for(int i = led2_index; i <= led2_index + LED_ONE_LENGTH - 1; i++) {
+       leds[i] = CRGB(red, green, blue);
+    }
+    
     shiftBackwards(led2_index, 2);
   }
 
@@ -256,8 +275,8 @@ int calculate_velocities(int led) {
         }
         
         double final1 = vel1_a + vel1_b;
-//        Serial.print("New led1 velocity in function: ");
-//        Serial.println(final1);
+        Serial.print("New led1 velocity in function: ");
+        Serial.println(final1);
         return round(final1);
       
     } else {
@@ -279,8 +298,8 @@ int calculate_velocities(int led) {
          }
           
           double final2 = vel2_a - vel2_b;
-//          Serial.print("New led2 velocity in function: ");
-//          Serial.println(final2);
+          Serial.print("New led2 velocity in function: ");
+          Serial.println(final2);
           return round(final2);
         
     }
