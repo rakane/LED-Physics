@@ -22,17 +22,21 @@ boolean led1Collision = false;
 boolean led2Collision = false;
 
 // Because of how the velocity is implemented, a higher number means a lower velocity
+// Physics calculations are improvised to use the inverse of the velocity
 int led1_velocity = 4;
 int led2_velocity = -4;
 
 // Define led array
 CRGB leds[NUM_LEDS];
 
+// Execution count
 unsigned long executions = 0;
 
 void setup() {
   randomSeed(analogRead(0));
   Serial.begin(9600);
+
+  // Define LED properties and brightness
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS + 1);
   FastLED.setBrightness(BRIGHTNESS);
 
@@ -60,11 +64,7 @@ void setup() {
   for(int i = NUM_LEDS - LED_TWO_LENGTH; i < NUM_LEDS; i++) {
     leds[i] = CRGB(red, green, blue);
   }
-
-//  Serial.print("First Strip index: ");
-//  Serial.println(led1_index);
-//  Serial.print("Second Strip index: ");
-//  Serial.println(led2_index);
+  
   FastLED.show();  
 }
 
@@ -74,6 +74,7 @@ void loop() {
     led1_index = led1_index + LED_ONE_LENGTH - 1;
     led1_velocity = -1 * led1_velocity;
 
+    // Randomize color change
     red = random(255);
     green = random(255);
     blue = random(255);
@@ -90,6 +91,7 @@ void loop() {
     led2_index = led2_index - LED_TWO_LENGTH + 1;
     led2_velocity = -1 * led2_velocity;
 
+    // Randomize color change
     red = random(255);
     green = random(255);
     blue = random(255);
@@ -104,8 +106,9 @@ void loop() {
 
   // Check if blocks collided
   if(noCollision) {
-    // if there is no collision shift leds
     
+    // if there is no collision shift leds
+
     // checks which direction to shift block 1
     if(executions % abs(led1_velocity) == 0) {
       if(led1_velocity > 0) {
@@ -125,18 +128,15 @@ void loop() {
     }
     
   } else {
-      // Collision has occured between the blocks
-//      Serial.println("Collision!!!");
-//      Serial.print("First Strip index: ");
-//      Serial.println(led1_index);
-//      Serial.print("Second Strip index: ");
-//      Serial.println(led2_index);
       
       // calculate velocities
       int temp_led1 = led1_velocity;
       int temp_led2 = led2_velocity;
+
+      // Have to use a temp variable b/c the calculations are dependent on eachothers velocities
       int temp_1 = calculate_velocities(1); 
       int temp_2 = calculate_velocities(2);
+      
       led1_velocity = temp_1;
       led2_velocity = temp_2;
 
@@ -151,37 +151,25 @@ void loop() {
         led2_index = led2_index + LED_TWO_LENGTH - 1; //switch led2 forwards
       }
       
-
+      // Check direction and shift block 1
       if(led1_velocity > 0) {
         shiftForwards(led1_index, 1);
       } else {
         shiftBackwards(led1_index, 1);
       }
 
+      // Check direction and shift block 2
       if(led2_velocity > 0) {
         shiftForwards(led2_index, 2);
       } else {
         shiftBackwards(led2_index, 2);
       }
-
-      
-      Serial.print("New led1 velocity outside of function: ");
-      Serial.println(led1_velocity);
-      Serial.print("New led2 velocity outside of function: ");
-      Serial.println(led2_velocity);
-      Serial.println();
-
   }
 
-  
+  // Check for collisions  
   noCollision = checkCollision(led1_index, led2_index);
   led1Collision = checkLED_ONE_Collision(led1_index);
   led2Collision = checkLED_TWO_Collision(led2_index);
-
-//  Serial.print("First Strip index: ");
-//  Serial.println(led1_index);
-//  Serial.print("Second Strip index: ");
-//  Serial.println(led2_index);
 
   // resets execution count to avoid overflow
   if(executions > 10000) {
